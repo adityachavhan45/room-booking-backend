@@ -8,6 +8,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const roomRoutes = require('./routes/roomRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Load env vars
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/users', userRoutes);
 
 // Test route
 app.get('/test', (req, res) => {
