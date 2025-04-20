@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
+const adminAuth = require('../middleware/adminAuth');
 
 // Admin login
 router.post('/login', async (req, res) => {
@@ -56,6 +57,21 @@ router.post('/setup', async (req, res) => {
 
     await admin.save();
     res.status(201).json({ message: 'Admin account created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify admin token
+router.get('/verify', adminAuth, async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      admin: {
+        id: req.admin._id,
+        username: req.admin.username
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
