@@ -6,10 +6,15 @@ const Room = require('../models/Room');
 // @access  Private
 const bookRoom = async (req, res) => {
     try {
-        const { roomId, roomName, checkIn, checkOut, adults, children, totalAmount } = req.body;
+        const { roomId, roomName, checkIn, checkOut, adults, children, totalAmount, paymentMethod } = req.body;
 
-        if (!roomId || !roomName || !checkIn || !checkOut || !adults || !totalAmount) {
+        if (!roomId || !roomName || !checkIn || !checkOut || !adults || !totalAmount || !paymentMethod) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+        
+        // Validate payment method
+        if (paymentMethod !== 'cash' && paymentMethod !== 'online') {
+            return res.status(400).json({ success: false, message: 'Invalid payment method' });
         }
 
         // Get user info from auth middleware
@@ -25,7 +30,8 @@ const bookRoom = async (req, res) => {
             checkOut,
             adults,
             children,
-            totalAmount
+            totalAmount,
+            paymentMethod
         });
 
         await newBooking.save();

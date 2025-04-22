@@ -10,6 +10,7 @@ const bookingSchema = new mongoose.Schema({
     adults: { type: Number, required: true },
     children: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
+    paymentMethod: { type: String, required: true, enum: ['cash', 'online'] },
     status: { type: String, default: 'booked', enum: ['booked', 'cancelled', 'completed'] }
 }, { timestamps: true });
 
