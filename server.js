@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const userRoutes = require('./routes/userRoutes');
+const ipBlockMiddleware = require('./middleware/ipBlockMiddleware');
 
 // Load env vars
 dotenv.config();
@@ -23,6 +24,9 @@ app.use(cors());
 
 // Body parser
 app.use(express.json());
+
+// IP blocking middleware - add before routes
+app.use(ipBlockMiddleware);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
