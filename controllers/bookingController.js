@@ -21,6 +21,9 @@ const bookRoom = async (req, res) => {
         const userId = req.user._id;
         const userName = req.user.name;
 
+        // Set initial status based on payment method
+        const status = paymentMethod === 'cash' ? 'pending' : 'confirmed';
+
         const newBooking = new Booking({
             userId,
             userName,
@@ -31,7 +34,8 @@ const bookRoom = async (req, res) => {
             adults,
             children,
             totalAmount,
-            paymentMethod
+            paymentMethod,
+            status
         });
 
         await newBooking.save();
@@ -46,14 +50,40 @@ const bookRoom = async (req, res) => {
 };
 
 // @desc    Get all bookings (for admin)
-// @route   GET /api/bookings
-// @access  Public
+// @route   GET /api/bookings/admin/all
+// @access  Admin only
 const getBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find().sort({ createdAt: -1 });
-        res.json({ success: true, data: bookings });
+        // Get all bookings and populate user details
+        const bookings = await Booking.find()
+            .populate({
+                path: 'userId',
+                select: 'name email'
+            })
+            .sort({ createdAt: -1 });
+
+        // Transform bookings to include userName directly
+        const formattedBookings = bookings.map(booking => {
+            const bookingObj = booking.toObject();
+            return {
+                ...bookingObj,
+                userName: bookingObj.userId ? bookingObj.userId.name : 'Guest',
+                userEmail: bookingObj.userId ? bookingObj.userId.email : ''
+            };
+        });
+
+        res.json({ 
+            success: true, 
+            count: formattedBookings.length,
+            data: formattedBookings 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+        console.error('Error in getBookings:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server Error', 
+            error: error.message 
+        });
     }
 };
 
@@ -98,4 +128,42 @@ const cancelBooking = async (req, res) => {
     }
 };
 
-module.exports = { bookRoom, getBookings, getMyBookings, cancelBooking };
+// @desc    Update booking status (admin only)
+// @route   PUT /api/bookings/:id/status
+// @access  Admin only
+const updateBookingStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        
+        if (!status || !['confirmed', 'rejected', 'completed', 'cancelled'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const booking = await Booking.findById(req.params.id);
+        
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+
+        // For cash payments in pending state
+        if (booking.paymentMethod === 'cash' && booking.status === 'pending') {
+            if (!['confirmed', 'rejected'].includes(status)) {
+                return res.status(400).json({ success: false, message: 'Pending cash bookings can only be confirmed or rejected' });
+            }
+        }
+
+        booking.status = status;
+        await booking.save();
+
+        // Make room available if booking is rejected, cancelled, or completed
+        if (['rejected', 'cancelled', 'completed'].includes(status)) {
+            await Room.findByIdAndUpdate(booking.roomId, { isBooked: false });
+        }
+
+        res.json({ success: true, message: `Booking ${status} successfully` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+module.exports = { bookRoom, getBookings, getMyBookings, cancelBooking, updateBookingStatus };

@@ -1,14 +1,16 @@
 const express = require('express');
-const { bookRoom, getBookings, getMyBookings, cancelBooking } = require('../controllers/bookingController');
+const { bookRoom, getBookings, getMyBookings, cancelBooking, updateBookingStatus } = require('../controllers/bookingController');
 const auth = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 
 const router = express.Router();
 
-// Public routes
-router.get('/bookings', getBookings);
+// Admin routes
+router.get('/admin/all', adminAuth, getBookings);
+router.put('/:id/status', adminAuth, updateBookingStatus);
 
 // Protected routes (require authentication)
-router.post('/book-room', auth, bookRoom);
+router.post('/', auth, bookRoom);
 router.get('/my-bookings', auth, getMyBookings);
 router.put('/:id/cancel', auth, cancelBooking);
 

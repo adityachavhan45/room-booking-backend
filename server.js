@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const userRoutes = require('./routes/userRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const ipBlockMiddleware = require('./middleware/ipBlockMiddleware');
 
 // Load env vars
@@ -38,6 +39,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Test route
 app.get('/test', (req, res) => {
